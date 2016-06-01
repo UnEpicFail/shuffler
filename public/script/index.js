@@ -43,8 +43,14 @@ angular.module('app', [])
       app.Log(self.email, self.pwd)
 
       $http.post('/api/signin', {email: self.email, pwd: self.pwd})
-      .success(function () {
-        app.Log('success', arguments)
+      .success(function (result) {
+        app.Log('success', result)
+        if (result.error) {
+          app.Message('error', 'Error', result.data.msg)
+          return
+        }
+
+        app.Message('success', 'Success', 'log in success, with id ' + result.data.msg)
       })
       .error(function () {
         app.Log('error', arguments)
@@ -71,7 +77,7 @@ angular.module('app', [])
 
       app.Log(self.email, self.pwd, self.confirm)
 
-      $http.post('/api/signin', {email: self.email, pwd: self.pwd, confirm: self.confirm})
+      $http.post('/api/signup', {email: self.email, pwd: self.pwd, confirm: self.confirm})
       .success(function () {
         app.Log('success', arguments)
       }).error(function () {

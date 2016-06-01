@@ -3,6 +3,7 @@
     <script
       src = '/libs/angular/angular.min.js'
     ></script>
+    <link href="/static/css/index.css" rel="stilesheet"> 
   </head>
   <body >
     <form ng-controller='SigninController as signinForm' ng-submit='signinForm.submit()'>
@@ -16,13 +17,13 @@
     </form>
     <form ng-controller='SignupController as signupForm' ng-submit='signupForm.submit()'>
       <div>
-        <input type='text' ng-model='signinForm.email'>
+        <input type='text' ng-model='signupForm.email'>
       </div>
       <div>
-        <input type='password' ng-model='signinForm.pwd'>
+        <input type='password' ng-model='signupForm.pwd'>
       </div>
       <div>
-        <input type='password' ng-model='signinForm.confirm'>
+        <input type='password' ng-model='signupForm.confirm'>
       </div>
       <input type='submit' value='Signup'>
     </form>

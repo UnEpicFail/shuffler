@@ -20,6 +20,8 @@
     "angular": "^1.5.5",
     "express": "^4.13.4",
     "jade": "^1.11.0",
-    "mongoose": "^4.4.19"
+    "mongoose": "^4.4.19",
+    "mongodb": "~2.1.21",
+    "body-parser": "~1.15.1"
   }
 }

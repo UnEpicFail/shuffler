@@ -1,0 +1,8 @@
+*{
+  clear: both;
+}
+
+h1, h2, h3, h4, p, li, ul {
+  padding: 0;
+  margin: 0;
+}
