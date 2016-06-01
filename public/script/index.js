@@ -15,16 +15,15 @@ app.Message = function (type, title, msg) {
   var p = document.createElement('p')
   var body = document.getElementsByTagName('body')[0]
   div.className += type
-  h2.innerHtml = title
-  p.innerHtml = msg
   div.appendChild(h2)
   div.appendChild(p)
   body.appendChild(div)
-  console.log(body)
-  setTimeout(1000, function () {
-    console.log(body, div)
+  h2.innerHTML = title
+  p.innerHTML = msg
+  div.className = 'fadeout'
+  setTimeout(function () {
     body.removeChild(div)
-  })
+  }, 1000)
 }
 
 angular.module('app', [])
@@ -55,6 +54,11 @@ angular.module('app', [])
   .controller('SignupController', function ($http) {
     var self = this
     self.submit = function () {
+      app.Log(self.email, self.pwd, self.confirm)
+      if (typeof self.email === 'undefined' || typeof self.pwd === 'undefined' || typeof self.confirm === 'undefined') {
+        app.Message('error', 'Error', 'empty email or pwd or confirm')
+        return
+      }
       if (self.email.trim().length === 0 || self.pwd.trim().length === 0 || self.confirm.trim().length === 0) {
         app.Message('error', 'Error', 'email or pwd or confirm not valide')
         return
