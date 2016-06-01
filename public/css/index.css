@@ -1,3 +1,6 @@
+/**************
+*****reset*****
+**************/
 *{
   clear: both;
 }
@@ -5,4 +8,37 @@
 h1, h2, h3, h4, p, li, ul {
   padding: 0;
   margin: 0;
+}
+
+/**************
+***components**
+**************/
+#messagesHolder{
+  position: fixed;
+  top: 0;
+  right: 0;
+}
+
+.message {
+  padding: 10px;
+  width: 300px;
+  opacity: 1;
+}
+
+/**************
+*****state*****
+**************/
+.error {
+  color: #ff6666;
+  border: 1px solid #AA3333;
+}
+
+.success {
+  color: #66ff66;
+  border: 1px solid #33AA33;
+}
+
+.fadeout {
+  transition: opacity 1.5s ;
+  opacity: 0;
 }

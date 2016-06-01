@@ -9,21 +9,28 @@ app.Log = function () {
   console.log.apply(console, arguments)
 }
 
-app.Message = function (type, title, msg) {
+app.Message = function (type, title, msg, cd) {
   var div = document.createElement('div')
   var h2 = document.createElement('h2')
   var p = document.createElement('p')
-  var body = document.getElementsByTagName('body')[0]
-  div.className += type
+  var holder = document.getElementById('messagesHolder')
+  if (!holder) {
+    holder = document.createElement('div')
+    holder.id = 'messagesHolder'
+    document.getElementsByTagName('body')[0].appendChild(holder)
+  }
+  div.className += 'message ' + type
   div.appendChild(h2)
   div.appendChild(p)
-  body.appendChild(div)
+  holder.appendChild(div)
   h2.innerHTML = title
   p.innerHTML = msg
-  div.className = 'fadeout'
   setTimeout(function () {
-    body.removeChild(div)
-  }, 1000)
+    div.className += (div.className.length > 0) ? ' fadeout' : 'fadeout'
+    setTimeout(function () {
+      holder.removeChild(div)
+    }, 500)
+  }, (cd || 1000))
 }
 
 angular.module('app', [])
@@ -78,8 +85,14 @@ angular.module('app', [])
       app.Log(self.email, self.pwd, self.confirm)
 
       $http.post('/api/signup', {email: self.email, pwd: self.pwd, confirm: self.confirm})
-      .success(function () {
-        app.Log('success', arguments)
+      .success(function (result) {
+        app.Log(result)
+        if (result.error) {
+          app.Message('error', 'Error', result.data.msg)
+          return
+        }
+
+        app.Message('success', 'Success', 'create user, with id ' + result.data.id)
       }).error(function () {
         app.Log('error', arguments)
       })
