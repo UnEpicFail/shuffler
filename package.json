@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/UnEpicFail/shuffler#readme",
   "dependencies": {
+    "angular": "^1.5.5",
     "express": "^4.13.4",
     "jade": "^1.11.0",
     "mongoose": "^4.4.19"
