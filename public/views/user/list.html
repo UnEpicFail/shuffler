@@ -1,0 +1,22 @@
+<html ng-app='app'>
+  <head>
+    <script
+      src = '/libs/angular/angular.min.js'
+    ></script>
+    <link href="/static/css/index.css" rel="stylesheet">
+  </head>
+  <body >
+    <h1>List</h1>
+    <div ng-controller = 'UserListControllet as userList'>
+      <div ng-repeat = '(i, user) in userList.list' ng-class = 'user-snippet'>
+        <div ng-class = 'avatar' >
+          <img ng-src = '{{user.avatar}}'>
+        </div>
+        <h2><a href='/user/view/{{user._id}}'>{{user.email}}</a></h2>
+        <p>{{user.status}}</p>
+      </div>
+    </div>
+  </body>
+  <script src='/static/script/index.js'>
+  </script>
+</html>

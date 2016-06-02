@@ -1,3 +1,8 @@
+/**
+* ToDo
+* Разаделить index.js по сонтроллерам и отдельно app.js
+**/
+
 var app = {}
 
 app.Silence = false
@@ -14,6 +19,7 @@ app.Message = function (type, title, msg, cd) {
   var h2 = document.createElement('h2')
   var p = document.createElement('p')
   var holder = document.getElementById('messagesHolder')
+  var handler = null
   if (!holder) {
     holder = document.createElement('div')
     holder.id = 'messagesHolder'
@@ -25,12 +31,33 @@ app.Message = function (type, title, msg, cd) {
   holder.appendChild(div)
   h2.innerHTML = title
   p.innerHTML = msg
-  setTimeout(function () {
-    div.className += (div.className.length > 0) ? ' fadeout' : 'fadeout'
-    setTimeout(function () {
-      holder.removeChild(div)
-    }, 500)
-  }, (cd || 1000))
+  handler = setHideTimeout(div, holder)
+  div.onmouseover = function () {
+    clearTimeout(handler)
+    handler = null
+  }
+  div.onmouseout = function () {
+    clearTimeout(handler)
+    handler = null
+    handler = setHideTimeout(div, holder)
+  }
+
+  function setHideTimeout (div, holder) {
+    return setTimeout(function () {
+      div.className += (div.className.length > 0) ? ' fadeout' : 'fadeout'
+      setTimeout(function () {
+        holder.removeChild(div)
+      }, 500)
+    }, (cd || 1000))
+  }
+}
+
+app.paramsToUrl = function (url, params) {
+  var str = []
+  for (var i in params) {
+    str.push(i + '=' + params[i])
+  }
+  return url + '?' + str.join('&')
 }
 
 angular.module('app', [])
@@ -58,6 +85,9 @@ angular.module('app', [])
         }
 
         app.Message('success', 'Success', 'log in success, with id ' + result.data.msg)
+        setTimeout(function () {
+          window.location = '/user/list'
+        }, 1000)
       })
       .error(function () {
         app.Log('error', arguments)
@@ -93,8 +123,59 @@ angular.module('app', [])
         }
 
         app.Message('success', 'Success', 'create user, with id ' + result.data.id)
-      }).error(function () {
+      })
+      .error(function () {
         app.Log('error', arguments)
       })
     }
+  })
+  .controller('UserListControllet', function ($http) {
+    var self = this
+    self.list = []
+    self.getList = function (filter) {
+      $http.get('/api/user/list')
+        .success(function (result) {
+          app.Log('success', result)
+          if (result.error) {
+            app.Message('error', 'Error', result.data.msg)
+            return
+          }
+
+          self.list = result.data.list.slice(0)
+        })
+        .error(function () {
+          app.Log('error', arguments)
+        })
+    }
+
+    self.getList()
+  })
+  .controller('UserViewController', function ($http) {
+    var self = this
+    self.user = {}
+    self.getUser = function () {
+      if (!self.id) {
+        app.Message('error', 'Error', 'No ID')
+        return
+      }
+
+      $http.get(app.paramsToUrl('/api/user/view', {id: self.id}))
+        .success(function (result) {
+          if (result.error) {
+            app.Message('error', 'Error', result.data.msg)
+            return
+          }
+
+          self.user = result.data
+        })
+        .error(function () {
+          app.Log('error', arguments)
+        })
+    }
+    self.getId = function () {
+      return window.location.pathname.split('/').pop()
+    }
+
+    self.id = self.getId()
+    self.getUser()
   })

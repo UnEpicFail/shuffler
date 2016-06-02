@@ -1,3 +1,8 @@
+/**
+* ToDo
+* Разделить app на app, routing, api и healpers
+**/
+
 var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
@@ -11,9 +16,40 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+/***************/
+/****Routing****/
+/***************/
+
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/public/views/index.html')
 })
+
+app.get('/user/list', function (req, res) {
+  if (!hasPermition(req, '/user/list/')) {
+    res.sendFile(__dirname + '/public/views/suppert/p500.html')
+    return
+  }
+  res.sendFile(__dirname + '/public/views/user/list.html')
+})
+
+app.get('/user/view/*', function (req, res) {
+  if (req.params[0].trim().length === 0) {
+    res.sendFile(__dirname + '/public/views/suppert/p404.html')
+    return
+  }
+
+  if (!hasPermition(req, '/user/list/')) {
+    res.sendFile(__dirname + '/public/views/suppert/p500.html')
+    return
+  }
+
+  res.sendFile(__dirname + '/public/views/user/view.html')
+})
+
+
+/***************/
+/*****POSTS*****/
+/***************/
 
 app.post('/api/signin', function (req, res) {
   console.log('req.params signin', req.body)
@@ -75,14 +111,86 @@ app.post('/api/signup', function (req, res) {
             db.close()
           })
         }
-      })
+      }, {password: 0})
     }
   })
 })
 
+
+/***************/
+/******GETS*****/
+/***************/
+
+app.get('/api/user/list', function (req, res) {
+  if (!hasPermition(req, '/api/user/list')) {
+    sendNotOkJson({msg: 'Has no permisstion to /api/user/list'}, res)
+    return
+  }
+
+  MongoClient.connect(url, function (err, db) {
+    if (err) {
+      console.log('Unable to connect to the mongoDB server. Error:', err)
+      sendNotOkJson({msg: 'Get Users faled'}, res)
+    } else {
+      console.log('Connection established to', url)
+      mongoFind(db, 'user', {}, function (err, result) {
+        db.close()
+        if (err) {
+          console.log(err)
+          sendNotOkJson({msg: 'Get Users faled'}, res)
+          return
+        }
+        sendOkJson({list: result.slice(0), count: 0}, res)
+      }, {password: 0})
+    }
+  })
+})
+
+app.get('/api/user/view', function (req, res) {
+  if (!hasPermition(req, '/api/user/list')) {
+    sendNotOkJson({msg: 'Has no permisstion to /api/user/view'}, res)
+    return
+  }
+
+  if (!req.query.id) {
+    sendNotOkJson({msg: 'No ID'}, res)
+    return
+  }
+
+  MongoClient.connect(url, function (err, db) {
+    if (err) {
+      console.log('Unable to connect to the mongoDB server. Error:', err)
+      sendNotOkJson({msg: 'Get User faled'}, res)
+    } else {
+      console.log('Connection established to', url)
+      mongoFind(db, 'user', {_id: req.query.id}, function (err, result) {
+        console.log(result)
+        db.close()
+        if (err) {
+          console.log(err)
+          sendNotOkJson({msg: 'Get User faled'}, res)
+        } else if (result.length > 0) {
+          sendOkJson(result[0], res)
+        } else {
+          sendNotOkJson({msg: 'No User with id ' + req.query.id}, res)
+        }
+      }, {password: 0})
+    }
+  })
+})
+
+/***************/
+/*****Start*****/
+/***************/
+
 app.listen(3000, function () {
   console.log('I\'m start')
 })
+
+
+/***************/
+/****Helpers****/
+/***************/
 
 function mongoInsert (db, collection_name, data, cb) {
   var collection = db.collection(collection_name)
@@ -91,9 +199,9 @@ function mongoInsert (db, collection_name, data, cb) {
   })
 }
 
-function mongoFind (db, collection_name, data, cb) {
+function mongoFind (db, collection_name, data, cb, projection) {
   var collection = db.collection(collection_name)
-  collection.find(data).toArray(function (err, result) {
+  collection.find(data, (projection || {})).toArray(function (err, result) {
     cb(err, result)
   })
 }
@@ -112,4 +220,12 @@ function sendNotOkJson (data, res) {
     success: false,
     error: true
   }))
+}
+
+function hasPermition (res, action) {
+  return hasSession(res)
+}
+
+function hasSession (res) {
+  return true
 }
