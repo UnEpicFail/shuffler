@@ -7,6 +7,7 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
 var MongoClient = require('mongodb').MongoClient
+var ObjectId = require('mongodb').ObjectID
 var assert = require('assert')
 var url = 'mongodb://localhost:27017/shuffler'
 
@@ -16,9 +17,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
-/***************/
 /****Routing****/
-/***************/
 
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/public/views/index.html')
@@ -46,10 +45,7 @@ app.get('/user/view/*', function (req, res) {
   res.sendFile(__dirname + '/public/views/user/view.html')
 })
 
-
-/***************/
 /*****POSTS*****/
-/***************/
 
 app.post('/api/signin', function (req, res) {
   console.log('req.params signin', req.body)
@@ -117,9 +113,7 @@ app.post('/api/signup', function (req, res) {
 })
 
 
-/***************/
 /******GETS*****/
-/***************/
 
 app.get('/api/user/list', function (req, res) {
   if (!hasPermition(req, '/api/user/list')) {
@@ -163,13 +157,17 @@ app.get('/api/user/view', function (req, res) {
       sendNotOkJson({msg: 'Get User faled'}, res)
     } else {
       console.log('Connection established to', url)
-      mongoFind(db, 'user', {_id: req.query.id}, function (err, result) {
-        console.log(result)
+      //_id: req.query.id
+      mongoFind(db, 'user', {_id: ObjectId(req.query.id)}, function (err, result) {
+        console.log(req.query.id, result)
         db.close()
         if (err) {
           console.log(err)
           sendNotOkJson({msg: 'Get User faled'}, res)
         } else if (result.length > 0) {
+          // for (var i in result) {
+          //   console.log(req.query.id == result[i]._id)
+          // }
           sendOkJson(result[0], res)
         } else {
           sendNotOkJson({msg: 'No User with id ' + req.query.id}, res)
@@ -179,18 +177,13 @@ app.get('/api/user/view', function (req, res) {
   })
 })
 
-/***************/
 /*****Start*****/
-/***************/
 
 app.listen(3000, function () {
   console.log('I\'m start')
 })
 
-
-/***************/
 /****Helpers****/
-/***************/
 
 function mongoInsert (db, collection_name, data, cb) {
   var collection = db.collection(collection_name)
