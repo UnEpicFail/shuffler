@@ -13,6 +13,7 @@ var ObjectId = require('mongodb').ObjectID
 var url = 'mongodb://localhost:27017/shuffler'
 var crypto = require('crypto')
 var passwordHash = require('password-hash')
+const dropDBpwd = 'sha1$9234b2a8$1$4d4826fcaa736914db50fba3465488ed02c3cdf5'
 
 app.use('/static', express.static(__dirname + '/public'))
 app.use('/libs', express.static(__dirname + '/node_modules'))
@@ -37,7 +38,6 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/public/views/singinup.html')
   }
 })
-
 
 app.get('/user/list', function (req, res) {
   if (!hasPermition(req, res, '/user/list/')) {
@@ -64,50 +64,57 @@ app.get('/user/view/*', function (req, res) {
 /*****POSTS*****/
 
 app.post('/api/signin', function (req, res) {
-  console.log('req.params signin', req.body)
   var user = null
   var msg = null
   MongoClient.connect(url, function (err, db) {
     if (err) {
+      db.close()
       console.log('Unable to connect to the mongoDB server. Error:', err)
-      sendNotOkJson({msg: 'Login faled'}, res)
+      sendNotOkJson({msg: 'Unable to connect to the mongoDB server. Error:', err}, res)
+      return
     } else {
       console.log('Connection established to', url)
       mongoFind(db, 'user', {email: req.body.email}, function (err, result) {
         if (err) {
+          db.close()
           console.log(err)
+          sendNotOkJson({msg: err}, res)
+          return
         } else if (result.length) {
           if (passwordHash.verify(req.body.pwd, result[0].password)) {
             if (result[0].status === 2) {
               req.session.save(function (err) {
+                db.close()
                 if (err) {
                   console.log('err', err)
-                  msg = 'Can\'t save sesion!'
-                } else {
-                  user = {id: result[0]._id}
+                  sendNotOkJson({msg: 'Can\'t save sesion!'}, res)
+                  return
                 }
+
+                sendOkJson({id: result[0]._id}, res)
               })
             } else {
-              msg = 'Email is not confirmed!'
+              db.close()
+              sendNotOkJson({msg: 'Email is not confirmed!'}, res)
+              return
             }
+          } else {
+            db.close()
+            sendNotOkJson({msg: 'Password not mutch'}, res)
+            return
           }
         } else {
+          db.close()
           console.log('No document(s) found with defined "find" criteria!')
-        }
-        db.close()
-        if (!user) {
-          console.log('msg', msg)
-          sendNotOkJson({msg: msg || 'Login faled'}, res)
+          sendNotOkJson({msg: 'Email not find'}, res)
           return
         }
-        sendOkJson(user, res)
       })
     }
   })
 })
 
 app.post('/api/signup', function (req, res) {
-  console.log('req.params signup', req.body)
   MongoClient.connect(url, function (err, db) {
     if (err) {
       console.log('Unable to connect to the mongoDB server. Error:', err)
@@ -115,7 +122,6 @@ app.post('/api/signup', function (req, res) {
     } else {
       console.log('Connection established to', url)
       mongoFind(db, 'user', {email: req.body.email}, function (err, result) {
-        console.log('result.length', result.length)
         if (err) {
           sendNotOkJson({msg: err}, res)
         } else if (result.length > 0) {
@@ -132,8 +138,7 @@ app.post('/api/signup', function (req, res) {
             if (err) {
               sendNotOkJson({msg: err}, res)
             } else {
-              console.log(result)
-              sendOkJson({id: result.insertedIds}, res)
+              sendOkJson({id: result.ops[0]._id, uniq: result.ops[0].confirmId, email: result.ops[0].email}, res)
             }
             db.close()
           })
@@ -143,6 +148,30 @@ app.post('/api/signup', function (req, res) {
   })
 })
 
+app.post('/api/dropDB', function (req, res) {
+  if (passwordHash.verify(req.body.pwd, dropDBpwd)) {
+    MongoClient.connect(url, function (err, db) {
+      if (err) {
+        db.close()
+        console.log(err)
+        sendNotOkJson({msg: err}, res)
+        return
+      }
+      mongoDrop(db, function(err, result){
+        db.close()
+        if (err) {
+          console.log(err)
+          sendNotOkJson({msg: err}, res)
+          return
+        }
+        sendOkJson({msg: 'DB droped'}, res)
+      })
+    })
+  } else {
+    sendNotOkJson({msg: 'Password not equal'}, res)
+  }
+
+})
 
 /******GETS*****/
 
@@ -215,9 +244,13 @@ app.get('/api/confirm', function (req, res) {
           console.log(err)
           sendNotOkJson({msg: err}, res)
         } else if (result.length) {
-          console.log(req.query.uniq, result[0].confirmId)
           if (req.query.uniq === result[0].confirmId) {
-            sendOkJson(result[0], res)
+            var user = result[0]
+            user.status = 2
+            mongoUpdate(db, 'user', {_id: ObjectId(user._id)}, user, function(){
+              db.close()
+              res.redirect('/')
+            })
           } else {
             sendNotOkJson({msg: 'Uniq do no equal'}, res)
           }
@@ -225,7 +258,7 @@ app.get('/api/confirm', function (req, res) {
           console.log('No document(s) found with defined "find" criteria!')
           sendNotOkJson({msg: 'Confirm faled'}, res)
         }
-      }, {password: 0})
+      })
     }
   })
 })
@@ -249,6 +282,19 @@ function mongoFind (db, collection_name, data, cb, projection) {
   var collection = db.collection(collection_name)
   collection.find(data, (projection || {})).toArray(function (err, result) {
     cb(err, result)
+  })
+}
+
+function mongoUpdate (db, collection_name, query, data, cb) {
+  var collection = db.collection(collection_name)
+  collection.update(query, data, {upsert: true }, function (err, result) {
+    cb(err, result)
+  })
+}
+
+function mongoDrop (db, cb) {
+  db.dropDatabase(function (err, result){
+    cb(err, result);
   })
 }
 

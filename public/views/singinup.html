@@ -27,6 +27,9 @@
       <div>
         <input type='password' ng-model='signupForm.confirm'>
       </div>
+      <div ng-if = "signupForm.link">
+        <a ng-href ='{{signupForm.link}}'>Confirm</a>
+      </div>
       <input type='submit' value='Signup'>
     </form>
     <form ng-controller='ConfirmController as confirmForm' ng-submit='confirmForm.submit()'>
@@ -37,7 +40,14 @@
       <div>
         <input type='text' ng-model='confirmForm.uniq'>
       </div>
-      <input type='submit' value='Signup'>
+      <input type='submit' value='Confirm'>
+    </form>
+    <form ng-controller='DropDBController as dropForm' ng-submit='dropForm.submit()'>
+      <h2>Drop DB</h2>
+      <div>
+        <input type='password' ng-model='dropForm.pwd'>
+      </div>
+      <input type='submit' value='Drop'>
     </form>
   </body>
   <script src='/static/script/index.js'>

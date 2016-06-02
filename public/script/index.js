@@ -123,6 +123,7 @@ angular.module('app', [])
         }
 
         app.Message('success', 'Success', 'create user, with id ' + result.data.id)
+        self.link = app.paramsToUrl('/api/confirm', {email: result.data.email, uniq: result.data.uniq})
       })
       .error(function () {
         app.Log('error', arguments)
@@ -201,5 +202,22 @@ angular.module('app', [])
       .error(function () {
         app.Log('error', arguments)
       })
+    }
+  })
+  .controller('DropDBController', function ($http) {
+    var self = this
+    self.submit = function (){
+      $http.post('/api/dropDB', {pwd: self.pwd})
+        .success(function (result) {
+          if (result.error) {
+            app.Message('error', 'Error', result.data.msg)
+            return
+          }
+
+          app.Message('success', 'Success', result.data.msg)
+        })
+        .error(function () {
+          app.Log('error', arguments)
+        })
     }
   })

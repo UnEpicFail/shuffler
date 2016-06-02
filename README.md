@@ -1,6 +1,5 @@
 # shuffler
 
-
 #Docker
 #build
 docker build -t <docker-name> .
