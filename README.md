@@ -1,7 +1,7 @@
 # shuffler
 
 
-#Docker 
+#Docker
 #build
 docker build -t <docker-name> .
 
@@ -13,3 +13,13 @@ docker rm $(docker ps -aq)
 
 #remove
 docker rmi <docker-name>
+
+#MongoDB
+#run
+service mongodb start
+
+#backup
+mongodump -o <dump/directory>
+
+#restore
+mongorestore <dump/directory>
