@@ -157,17 +157,12 @@ app.get('/api/user/view', function (req, res) {
       sendNotOkJson({msg: 'Get User faled'}, res)
     } else {
       console.log('Connection established to', url)
-      //_id: req.query.id
       mongoFind(db, 'user', {_id: ObjectId(req.query.id)}, function (err, result) {
-        console.log(req.query.id, result)
         db.close()
         if (err) {
           console.log(err)
           sendNotOkJson({msg: 'Get User faled'}, res)
         } else if (result.length > 0) {
-          // for (var i in result) {
-          //   console.log(req.query.id == result[i]._id)
-          // }
           sendOkJson(result[0], res)
         } else {
           sendNotOkJson({msg: 'No User with id ' + req.query.id}, res)
