@@ -6,16 +6,16 @@
     <link href="/static/css/index.css" rel="stylesheet">
   </head>
   <body >
-    <div ng-controller = 'UserViewController as user'>
+    <div ng-controller = 'UserViewController as userView'>
       <div ng-class = 'user-snippet'>
         <div ng-class = 'avatar' >
-          <img ng-src = '{{user.avatar}}'>
+          <img ng-src = '{{userView.user.avatar}}'>
         </div>
-        <h2>{{user.email}}</h2>
-        <p>{{user.status}}</p>
+        <h2>{{userView.user.email}}</h2>
+        <p>{{userView.user.status}}</p>
       </div>
     </div>
-    
+
   </body>
   <script src='/static/script/index.js'>
   </script>

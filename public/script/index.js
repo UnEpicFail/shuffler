@@ -150,7 +150,7 @@ angular.module('app', [])
 
     self.getList()
   })
-  .controller('UserViewController', function ($http) {
+  .controller('UserViewController', function ($scope, $http) {
     var self = this
     self.user = {}
     self.getUser = function () {
@@ -167,6 +167,8 @@ angular.module('app', [])
           }
 
           self.user = result.data
+          self.user.avatar = self.user.avatar || 'http://placehold.it/75x75'
+          app.Log(self.user, $scope)
         })
         .error(function () {
           app.Log('error', arguments)
@@ -178,4 +180,26 @@ angular.module('app', [])
 
     self.id = self.getId()
     self.getUser()
+  })
+  .controller('ConfirmController', function ($http) {
+    var self = this
+    self.submit = function () {
+      if (typeof self.uniq === 'undefined' || typeof self.email === 'undefined') {
+        app.Message('error', 'Error', 'no uniq or email')
+        return
+      }
+
+      $http.get(app.paramsToUrl('/api/confirm/', {email: self.email, uniq: self.uniq}))
+      .success(function (result) {
+        if (result.error) {
+          app.Message('error', 'Error', result.data.msg)
+          return
+        }
+
+        window.location = '/'
+      })
+      .error(function () {
+        app.Log('error', arguments)
+      })
+    }
   })
